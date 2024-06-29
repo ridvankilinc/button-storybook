@@ -1,5 +1,3 @@
-import { themes, ensure } from '@storybook/theming';
-
 /** @type { import('@storybook/react').Preview } */
 const preview = {
   parameters: {
