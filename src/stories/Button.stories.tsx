@@ -36,7 +36,7 @@ export const Rounded: Story = {
       <Button label="Rounded None" rounded="rounded-none" />
       <Button label="Rounded Sm" rounded="rounded-sm" />
       <Button label="Rounded" rounded="rounded" />
-      <Button label="Rounded 2xl" rounded="rounded-2xl" />
+      <Button label="Rounded Xl" rounded="rounded-xl" />
       <Button label="Rounded 3xl" rounded="rounded-3xl" />
       <Button label="Rounded Full" rounded="rounded-full" />
     </div>
