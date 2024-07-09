@@ -1,8 +1,8 @@
-import { Meta, Canvas, Story, Controls } from "@storybook/addon-docs";
+import { Meta, Canvas, Story, Controls, Preview } from "@storybook/addon-docs";
 import { Button } from "./Button.tsx";
 import * as ButtonStories from "./Button.stories.tsx";
 
-<Meta of={ButtonStories} />
+<Meta of={ButtonStories} component={Button} />
 
 # Button
 
@@ -23,16 +23,16 @@ It supports different colors and border radius styles.
 
 A button can take color variants.
 
-<Canvas of={ButtonStories.Colors}></Canvas>
+<Canvas of={ButtonStories.Colors} />
 
 ### Rounded
 
 A button can take rounded variants.
 
-<Canvas of={ButtonStories.Rounded}></Canvas>
+<Canvas of={ButtonStories.Rounded} />
 
 ### Extension
 
 A button can take rounded extension.
 
-<Canvas of={ButtonStories.Extension}></Canvas>
+<Canvas of={ButtonStories.Extension} />
