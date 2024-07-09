@@ -23,10 +23,7 @@ export const Default = Template.bind({});
 Default.args = {
   options: [
     { label: "Jack", value: "Option1" },
-    {
-      label: "AliceAliceAliceAliceAliceAliceAliceAliceAlice",
-      value: "Option 2",
-    },
+    { label: "Alice", value: "Option 2" },
     { label: "James", value: "Option 3" },
     { label: "Adam", value: "Option 4", disabled: true },
   ],

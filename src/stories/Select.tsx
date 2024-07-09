@@ -152,6 +152,24 @@ const Select = ({
     option.label.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  const handleSelectAll = (options: Option[]) => {
+    const allAvailableValues = options
+      .filter((option) => !option.disabled)
+      .map((option) => option.value);
+    if (
+      selectedValues.length ===
+      filteredOptions.filter((option) => !option.disabled).length
+    ) {
+      setSelectedValues([]);
+      setSelectedLabels([]);
+      onChange([]);
+    } else {
+      setSelectedValues(allAvailableValues);
+      setSelectedLabels(options.map((option) => option.label));
+      onChange(allAvailableValues);
+    }
+  };
+
   return (
     <div
       ref={selectRef}
@@ -163,15 +181,15 @@ const Select = ({
         onClick={toggleMenu}
         title={selectedLabels.join(", ")}
         className={cn(
-          "border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-2 pr-8 transition-outline duration-300 truncate text-gray-900",
+          "border-none outline outline-1  bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-2 pr-8 transition-outline duration-300 truncate text-gray-900",
           {
             "!h-6": size === "small",
             "!h-10": size === "large",
             "!outline-blue-500": hasFocus,
             "cursor-not-allowed hover:!outline-gray-300 !bg-gray-400/20":
               disabled,
-            "text-gray-300": label,
             "!cursor-text": searchInput,
+            "!text-gray-300": label,
           }
         )}
       >
@@ -193,7 +211,7 @@ const Select = ({
         ) : (
           <span
             className={cn({
-              "text-gray-300": selectedLabels.length === 0,
+              "!text-gray-300": selectedLabels.length === 0,
               "text-gray-900": selectedLabels.length > 0,
             })}
           >
@@ -256,59 +274,103 @@ const Select = ({
               }
             )}
           >
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option, i) => (
-                <div
-                  key={`${option.value}-${i}`}
-                  onClick={() =>
-                    handleOptionClick(
-                      option.value,
-                      option.label,
-                      option.disabled
-                    )
+            {multipleSelection && (
+              <div
+                onClick={() => handleSelectAll(filteredOptions)}
+                className={cn(
+                  "p-2 rounded truncate flex gap-1 items-center hover:bg-gray-200/50 cursor-pointer ",
+                  {
+                    "bg-blue-500/10":
+                      selectedValues.length ===
+                      filteredOptions.filter((option) => !option.disabled)
+                        .length,
                   }
-                  title={option.label}
-                  className={cn(
-                    "p-2 rounded truncate flex gap-1 items-center",
-                    {
-                      "bg-blue-500/10":
-                        selectedValues.includes(option.value) &&
-                        !option.disabled,
-                      "hover:bg-gray-200/50":
-                        !selectedValues.includes(option.value) &&
-                        !option.disabled,
-                      "text-gray-300 cursor-not-allowed": option.disabled,
-                    }
+                )}
+              >
+                <div>
+                  {selectedValues.length ===
+                  filteredOptions.filter((option) => !option.disabled)
+                    .length ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="20px"
+                      viewBox="0 -960 960 960"
+                      width="20px"
+                      fill="#3B82F6"
+                    >
+                      <path d="m424-312 282-282-56-56-226 226-114-114-56 56 170 170ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="20px"
+                      viewBox="0 -960 960 960"
+                      width="20px"
+                      fill="#e8eaed"
+                    >
+                      <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z" />
+                    </svg>
                   )}
-                >
-                  {multipleSelection &&
-                    selectedValues.includes(option.value) && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="20px"
-                        viewBox="0 -960 960 960"
-                        width="20px"
-                        fill="#3B82F6"
-                      >
-                        <path d="m424-312 282-282-56-56-226 226-114-114-56 56 170 170ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
-                      </svg>
-                    )}
-
-                  {multipleSelection &&
-                    !selectedValues.includes(option.value) && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="20px"
-                        viewBox="0 -960 960 960"
-                        width="20px"
-                        fill="#e8eaed"
-                      >
-                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z" />
-                      </svg>
-                    )}
-                  {option.label}
                 </div>
-              ))
+                Select All
+              </div>
+            )}
+            {filteredOptions.length > 0 ? (
+              [
+                filteredOptions.map((option, i) => (
+                  <div
+                    key={`${option.value}-${i}`}
+                    onClick={() =>
+                      handleOptionClick(
+                        option.value,
+                        option.label,
+                        option.disabled
+                      )
+                    }
+                    title={option.label}
+                    className={cn(
+                      "p-2 rounded truncate flex gap-1 items-center",
+                      {
+                        "bg-blue-500/10":
+                          selectedValues.includes(option.value) &&
+                          !option.disabled,
+                        "hover:bg-gray-200/50":
+                          !selectedValues.includes(option.value) &&
+                          !option.disabled,
+                        "text-gray-300 cursor-not-allowed": option.disabled,
+                      }
+                    )}
+                  >
+                    <div>
+                      {multipleSelection &&
+                        selectedValues.includes(option.value) && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            fill="#3B82F6"
+                          >
+                            <path d="m424-312 282-282-56-56-226 226-114-114-56 56 170 170ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                          </svg>
+                        )}
+                      {multipleSelection &&
+                        !selectedValues.includes(option.value) && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            fill="#e8eaed"
+                          >
+                            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z" />
+                          </svg>
+                        )}
+                    </div>
+                    {option.label}
+                  </div>
+                )),
+              ]
             ) : (
               <div className="p-2 text-gray-500 cursor-default">No data</div>
             )}
