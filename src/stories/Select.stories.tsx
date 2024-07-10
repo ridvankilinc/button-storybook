@@ -23,7 +23,7 @@ Default.args = {
     { label: "Eve", value: "Option 5" },
     { label: "Frank", value: "Option 6" },
     {
-      label: "Graceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      label: "Grace",
       value: "Option 7",
     },
     { label: "Henry", value: "Option 8" },

@@ -55,7 +55,6 @@ const Select = ({
   const [showClearIcon, setShowClearIcon] = useState<boolean>(false);
   const [hoverClearIcon, setHoverClearIcon] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
-  const [truncatedCharsCount, setTruncatedCharsCount] = useState(0);
 
   const selectRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -264,8 +263,6 @@ const Select = ({
           "!cursor-pointer": allowClear,
         })}
       >
-        {selectedValues.length}
-
         {multipleSelection && maxSelect && (
           <div className="text-gray-300">
             {selectedValues.length}/{maxSelect}
@@ -389,7 +386,6 @@ const Select = ({
                           (maxSelect &&
                             selectedValues.length >= maxSelect &&
                             !selectedValues.includes(option.value)),
-                        "bg-gray-100": option.disabled,
                       }
                     )}
                   >
