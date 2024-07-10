@@ -16,7 +16,9 @@ export interface SelectProps {
   allowClear?: boolean;
   searchInput?: boolean;
   multipleSelection?: boolean;
+  maxSelect?: number;
   size: "small" | "default" | "large";
+  status?: "default" | "warning" | "error";
 }
 
 const Select = ({
@@ -29,6 +31,8 @@ const Select = ({
   allowClear,
   searchInput,
   multipleSelection,
+  maxSelect,
+  status,
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [hasFocus, setHasFocus] = useState<boolean>(false);
@@ -46,11 +50,12 @@ const Select = ({
         : []
   );
   const [selectedValues, setSelectedValues] = useState<string[]>(
-    Array.isArray(defaultValue) ? defaultValue : [defaultValue]
+    Array.isArray(defaultValue) ? defaultValue : []
   );
   const [showClearIcon, setShowClearIcon] = useState<boolean>(false);
   const [hoverClearIcon, setHoverClearIcon] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
+  const [truncatedCharsCount, setTruncatedCharsCount] = useState(0);
 
   const selectRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,8 +117,10 @@ const Select = ({
           newSelectedValues = newSelectedValues.filter((v) => v !== value);
           newSelectedLabels = newSelectedLabels.filter((l) => l !== label);
         } else {
-          newSelectedValues.push(value);
-          newSelectedLabels.push(label);
+          if (!maxSelect || newSelectedValues.length < maxSelect) {
+            newSelectedValues.push(value);
+            newSelectedLabels.push(label);
+          }
         }
       } else {
         newSelectedValues = [value];
@@ -156,17 +163,35 @@ const Select = ({
     const allAvailableValues = options
       .filter((option) => !option.disabled)
       .map((option) => option.value);
-    if (
-      selectedValues.length ===
-      filteredOptions.filter((option) => !option.disabled).length
-    ) {
-      setSelectedValues([]);
-      setSelectedLabels([]);
-      onChange([]);
-    } else {
-      setSelectedValues(allAvailableValues);
-      setSelectedLabels(options.map((option) => option.label));
-      onChange(allAvailableValues);
+    const allAvailableLabels = options
+      .filter((option) => !option.disabled)
+      .map((option) => option.label);
+    if (maxSelect && maxSelect >= allAvailableLabels.length) {
+      if (
+        selectedValues.length ===
+        filteredOptions.filter((option) => !option.disabled).length
+      ) {
+        setSelectedValues([]);
+        setSelectedLabels([]);
+        onChange([]);
+      } else {
+        setSelectedValues(allAvailableValues);
+        setSelectedLabels(allAvailableLabels);
+        onChange(allAvailableValues);
+      }
+    } else if (!maxSelect) {
+      if (
+        selectedValues.length ===
+        filteredOptions.filter((option) => !option.disabled).length
+      ) {
+        setSelectedValues([]);
+        setSelectedLabels([]);
+        onChange([]);
+      } else {
+        setSelectedValues(allAvailableValues);
+        setSelectedLabels(allAvailableLabels);
+        onChange(allAvailableValues);
+      }
     }
   };
 
@@ -175,21 +200,29 @@ const Select = ({
       ref={selectRef}
       onMouseEnter={() => setShowClearIcon(true)}
       onMouseLeave={() => setShowClearIcon(false)}
-      className="border-box m-0 p-0 relative inline-block cursor-pointer text-sm w-48"
+      className="border-box m-0 p-0 relative inline-block cursor-pointer text-sm w-full"
     >
       <div
         onClick={toggleMenu}
         title={selectedLabels.join(", ")}
         className={cn(
-          "border-none outline outline-1  bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-2 pr-8 transition-outline duration-300 truncate text-gray-900",
+          "border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-2 pr-6 transition-outline duration-300 truncate text-gray-900",
           {
             "!h-6": size === "small",
             "!h-10": size === "large",
             "!outline-blue-500": hasFocus,
-            "cursor-not-allowed hover:!outline-gray-300 !bg-gray-400/20":
+            "!outline-red-500": hasFocus && status === "error",
+            "!outline-orange-600/50": hasFocus && status === "warning",
+            "cursor-not-allowed hover:outline-gray-300 !bg-gray-400/20":
               disabled,
             "!cursor-text": searchInput,
             "!text-gray-300": label,
+            "!text-gray-900": selectedLabels,
+            "outline-red-500 hover:!outline-red-500":
+              !disabled && status === "error",
+            "outline-orange-600/50 hover:!outline-orange-600/50":
+              !disabled && status === "warning",
+            "!pr-14": maxSelect,
           }
         )}
       >
@@ -223,13 +256,22 @@ const Select = ({
         onClick={toggleMenu}
         onMouseEnter={() => setHoverClearIcon(true)}
         onMouseLeave={() => setHoverClearIcon(false)}
-        className={cn("absolute right-1.5 top-1.5", {
+        className={cn("absolute right-1.5 top-1.5 flex items-center", {
           "!top-0.5": size === "small",
           "!top-2.5": size === "large",
           "hover:cursor-not-allowed": disabled,
-          "!cursor-text": searchInput,
+          "cursor-text": searchInput,
+          "!cursor-pointer": allowClear,
         })}
       >
+        {selectedValues.length}
+
+        {multipleSelection && maxSelect && (
+          <div className="text-gray-300">
+            {selectedValues.length}/{maxSelect}
+          </div>
+        )}
+
         {allowClear && showClearIcon && selectedValues.length > 0 ? (
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -274,16 +316,21 @@ const Select = ({
               }
             )}
           >
-            {multipleSelection && (
+            {multipleSelection && searchValue === "" && (
               <div
                 onClick={() => handleSelectAll(filteredOptions)}
                 className={cn(
                   "p-2 rounded truncate flex gap-1 items-center hover:bg-gray-200/50 cursor-pointer ",
                   {
-                    "bg-blue-500/10":
+                    "bg-blue-500/10 hover:bg-blue-500/10":
                       selectedValues.length ===
                       filteredOptions.filter((option) => !option.disabled)
                         .length,
+                    "text-gray-300 hover:cursor-not-allowed":
+                      maxSelect &&
+                      maxSelect <
+                        filteredOptions.filter((option) => !option.disabled)
+                          .length,
                   }
                 )}
               >
@@ -337,7 +384,12 @@ const Select = ({
                         "hover:bg-gray-200/50":
                           !selectedValues.includes(option.value) &&
                           !option.disabled,
-                        "text-gray-300 cursor-not-allowed": option.disabled,
+                        "text-gray-300 cursor-not-allowed":
+                          option.disabled ||
+                          (maxSelect &&
+                            selectedValues.length >= maxSelect &&
+                            !selectedValues.includes(option.value)),
+                        "bg-gray-100": option.disabled,
                       }
                     )}
                   >
