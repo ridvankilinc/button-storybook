@@ -16,16 +16,13 @@ const Template: StoryFn<SelectProps> = (args) => {
 export const Default = Template.bind({});
 Default.args = {
   options: [
-    { label: "Jack", value: "Option1" },
+    { label: "Jack", description: "açıklamama", value: "Option 1" },
     { label: "Alice", value: "Option 2" },
     { label: "James", value: "Option 3" },
-    { label: "Adam", value: "Option 4", disabled: true },
+    { label: "Adam", value: "Option 4" },
     { label: "Eve", value: "Option 5" },
     { label: "Frank", value: "Option 6" },
-    {
-      label: "Grace",
-      value: "Option 7",
-    },
+    { label: "Grace", value: "Option 7" },
     { label: "Henry", value: "Option 8" },
     { label: "Ivy", value: "Option 9" },
     { label: "Jackson", value: "Option 10" },
