@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import cn from "classnames";
 
 interface Option {
-  groupLabel?: string;
   label: string;
   value: string;
   disabled?: boolean;
@@ -24,11 +23,14 @@ export interface SelectProps {
   allowClear?: boolean;
   searchInput?: boolean;
   multipleSelection?: boolean;
+  multipleSelectionIcon?: boolean;
   selectAll?: boolean;
   maxSelect?: number;
   hideSelected?: boolean;
+  defaultActiveFirstOption?: boolean;
   size: "small" | "default" | "large";
   status?: "default" | "warning" | "error";
+  variant?: "outlined" | "borderless" | "filled";
 }
 
 const Select = ({
@@ -38,13 +40,16 @@ const Select = ({
   onChange,
   disabled = false,
   size = "default",
-  allowClear,
-  searchInput,
-  multipleSelection,
-  selectAll,
+  variant = "outlined",
+  status = "default",
+  allowClear = false,
+  searchInput = false,
+  multipleSelection = false,
+  multipleSelectionIcon = false,
+  selectAll = false,
   maxSelect,
-  hideSelected,
-  status,
+  hideSelected = false,
+  defaultActiveFirstOption = false,
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [hasFocus, setHasFocus] = useState<boolean>(false);
@@ -93,6 +98,15 @@ const Select = ({
       inputRef.current.focus();
     }
   }, [isOpen, searchInput]);
+
+  useEffect(() => {
+    if (!defaultValue && defaultActiveFirstOption && options.length > 0) {
+      const firstOption = options[0];
+      setSelectedValues([firstOption.value]);
+      setSelectedLabels([firstOption.label]);
+      onChange(firstOption.value);
+    }
+  }, [defaultActiveFirstOption, defaultValue, options, onChange]);
 
   const toggleMenu = (event?: React.MouseEvent) => {
     if (!disabled) {
@@ -217,13 +231,12 @@ const Select = ({
   return (
     <div
       ref={selectRef}
-      className="border-box m-0 p-0 relative inline-block cursor-pointer text-sm w-full"
+      className="relative inline-block cursor-pointer text-sm w-full"
     >
       <div
         onClick={toggleMenu}
-        title={selectedLabels.join(", ")}
         className={cn(
-          "border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-2 pr-6 transition-outline duration-300 truncate text-gray-900",
+          "border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-1 pr-6 transition-outline duration-300 truncate text-gray-900",
           {
             "!h-6": size === "small",
             "!h-10": size === "large",
@@ -240,6 +253,9 @@ const Select = ({
             "!outline-yellow-400 hover:!outline-yellow-400":
               !disabled && status === "warning",
             "!pr-14": maxSelect,
+            "!bg-gray-100/80 hover:!bg-gray-200/50 !outline-gray-100/80":
+              variant === "filled" && !hasFocus,
+            "!outline-transparent": variant === "borderless",
           }
         )}
       >
@@ -259,17 +275,23 @@ const Select = ({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <div className="flex gap-x-1 overflow-hidden whitespace-nowrap items-center mr-4">
+          <div
+            className={cn(
+              "flex gap-x-0.5 overflow-hidden whitespace-nowrap ml-1 mr-4 items-center ",
+              { "ml-0": multipleSelection }
+            )}
+          >
             {selectedLabels.length > 0 ? (
               selectedLabels.map((selectedLabel, index) => {
                 const value = selectedValues[index];
                 return (
                   <span
                     key={index}
-                    className={cn("flex items-center  rounded ", {
-                      "bg-gray-200/80 px-1.5 py-0.5": multipleSelection,
+                    title={selectedLabel}
+                    className={cn("flex items-center rounded", {
+                      "bg-gray-200/80 px-1 py-0.5": multipleSelection,
                       "!py-0": size === "small" && multipleSelection,
-                      "!py-1": size === "large" && multipleSelection,
+                      "!py-1.5": size === "large" && multipleSelection,
                       "text-gray-400": disabled,
                     })}
                   >
@@ -292,7 +314,7 @@ const Select = ({
                 );
               })
             ) : (
-              <span className="text-gray-300">{label}</span>
+              <span className="text-gray-300 ml-2">{label}</span>
             )}
           </div>
         )}
@@ -377,31 +399,33 @@ const Select = ({
                   }
                 )}
               >
-                <div>
-                  {selectedValues.length ===
-                  filteredOptions.filter((option) => !option.disabled)
-                    .length ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      height="20px"
-                      viewBox="0 -960 960 960"
-                      width="20px"
-                      className="fill-blue-400"
-                    >
-                      <path d="m424-312 282-282-56-56-226 226-114-114-56 56 170 170ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      height="20px"
-                      viewBox="0 -960 960 960"
-                      width="20px"
-                      className="fill-gray-200/60"
-                    >
-                      <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z" />
-                    </svg>
-                  )}
-                </div>
+                {multipleSelectionIcon && (
+                  <div>
+                    {selectedValues.length ===
+                    filteredOptions.filter((option) => !option.disabled)
+                      .length ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="20px"
+                        viewBox="0 -960 960 960"
+                        width="20px"
+                        className="fill-blue-400"
+                      >
+                        <path d="m424-312 282-282-56-56-226 226-114-114-56 56 170 170ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="20px"
+                        viewBox="0 -960 960 960"
+                        width="20px"
+                        className="fill-gray-200/60"
+                      >
+                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z" />
+                      </svg>
+                    )}
+                  </div>
+                )}
                 Select All
               </div>
             )}
@@ -436,7 +460,8 @@ const Select = ({
                   )}
                 >
                   <div>
-                    {multipleSelection &&
+                    {multipleSelectionIcon &&
+                      multipleSelection &&
                       selectedValues.includes(option.value) && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -448,7 +473,8 @@ const Select = ({
                           <path d="m424-312 282-282-56-56-226 226-114-114-56 56 170 170ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
                         </svg>
                       )}
-                    {multipleSelection &&
+                    {multipleSelectionIcon &&
+                      multipleSelection &&
                       !selectedValues.includes(option.value) && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
