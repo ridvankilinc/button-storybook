@@ -31,6 +31,7 @@ export interface SelectProps {
   size: "small" | "default" | "large";
   status?: "default" | "warning" | "error";
   variant?: "outlined" | "borderless" | "filled";
+  style?: React.CSSProperties;
 }
 
 const Select = ({
@@ -50,6 +51,7 @@ const Select = ({
   maxSelect,
   hideSelected = false,
   defaultActiveFirstOption = false,
+  style,
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [hasFocus, setHasFocus] = useState<boolean>(false);
@@ -70,9 +72,11 @@ const Select = ({
     Array.isArray(defaultValue) ? defaultValue : []
   );
   const [searchValue, setSearchValue] = useState<string>("");
+  const [overflowCount, setOverflowCount] = useState(0);
 
   const selectRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const overflowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -107,6 +111,31 @@ const Select = ({
       onChange(firstOption.value);
     }
   }, [defaultActiveFirstOption, defaultValue, options, onChange]);
+
+  useEffect(() => {
+    let currentWidth = 0;
+    const container = overflowRef.current;
+    if (!container) return;
+
+    const labels = container.querySelectorAll("span");
+
+    for (let i = 0; i < labels.length; i++) {
+      const label = labels[i];
+      if (label instanceof HTMLElement) {
+        currentWidth += label.offsetWidth;
+        if (currentWidth > container.offsetWidth) {
+          setOverflowCount((overflowCount) => overflowCount + 1);
+        }
+      }
+    }
+
+    if (currentWidth < container.offsetWidth) {
+      setOverflowCount(0);
+    }
+    console.log("containterwidth", container?.offsetWidth);
+    console.log("currentwidth", currentWidth);
+    console.log(overflowCount);
+  }, [selectedLabels, isOpen]);
 
   const toggleMenu = (event?: React.MouseEvent) => {
     if (!disabled) {
@@ -231,12 +260,13 @@ const Select = ({
   return (
     <div
       ref={selectRef}
-      className="relative inline-block cursor-pointer text-sm w-full"
+      style={style}
+      className="relative block cursor-pointer text-sm "
     >
       <div
         onClick={toggleMenu}
         className={cn(
-          "border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-1 pr-6 transition-outline duration-300 truncate text-gray-900",
+          "border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 pl-1 pr-6 transition-outline duration-300 text-gray-900",
           {
             "!h-6": size === "small",
             "!h-10": size === "large",
@@ -262,7 +292,7 @@ const Select = ({
         {searchInput && isOpen ? (
           <input
             ref={inputRef}
-            className={cn("w-full outline-none text-gray-900", {
+            className={cn("outline-none text-gray-900", {
               "cursor-text": searchInput,
               "hover:cursor-not-allowed": disabled,
             })}
@@ -276,58 +306,81 @@ const Select = ({
           />
         ) : (
           <div
+            ref={overflowRef}
             className={cn(
-              "flex gap-x-0.5 overflow-hidden whitespace-nowrap ml-1 mr-4 items-center ",
-              { "ml-0": multipleSelection }
+              "flex gap-x-0.5 ml-1 overflow-hidden whitespace-nowrap ",
+              {
+                "ml-0": multipleSelection,
+                "mr-4": maxSelect,
+              }
             )}
           >
             {selectedLabels.length > 0 ? (
-              selectedLabels.map((selectedLabel, index) => {
-                const value = selectedValues[index];
-                return (
-                  <span
-                    key={index}
-                    title={selectedLabel}
-                    className={cn("flex items-center rounded", {
-                      "bg-gray-200/80 px-1 py-0.5": multipleSelection,
-                      "!py-0": size === "small" && multipleSelection,
-                      "!py-1.5": size === "large" && multipleSelection,
-                      "text-gray-400": disabled,
-                    })}
-                  >
-                    {selectedLabel}
-                    {multipleSelection && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="20px"
-                        viewBox="0 -960 960 960"
-                        width="20px"
-                        className={cn("fill-gray-400 hover:fill-gray-600", {
-                          "cursor-pointer": searchInput,
+              <>
+                {selectedLabels
+                  .slice(0, selectedLabels.length - overflowCount)
+                  .map((selectedLabel, index) => {
+                    const value = selectedValues[index];
+                    return (
+                      <span
+                        key={index}
+                        title={selectedLabel}
+                        className={cn("flex items-center rounded", {
+                          "bg-gray-200/80 px-1 py-0.5": multipleSelection,
+                          "!py-0": size === "small" && multipleSelection,
+                          "!py-1.5": size === "large" && multipleSelection,
+                          "text-gray-400": disabled,
                         })}
-                        onClick={(e) => handleRemoveSelectedOption(e, value)}
                       >
-                        <path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z" />
-                      </svg>
+                        {selectedLabel}
+                        {multipleSelection && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            className={cn("fill-gray-400 hover:fill-gray-600", {
+                              "cursor-pointer": searchInput,
+                            })}
+                            onClick={(e) =>
+                              handleRemoveSelectedOption(e, value)
+                            }
+                          >
+                            <path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z" />
+                          </svg>
+                        )}
+                      </span>
+                    );
+                  })}
+                {overflowCount > 0 && (
+                  <span
+                    className={cn(
+                      "flex items-center rounded bg-gray-200/80 px-1 py-0.5"
                     )}
+                  >
+                    ... +{overflowCount}
                   </span>
-                );
-              })
+                )}
+              </>
             ) : (
               <span className="text-gray-300 ml-2">{label}</span>
             )}
           </div>
         )}
       </div>
+
       <span
         onClick={toggleMenu}
-        className={cn("absolute right-1.5 top-1.5 flex items-center", {
-          "!top-0.5": size === "small",
-          "!top-2.5": size === "large",
-          "hover:cursor-not-allowed": disabled,
-          "cursor-text": searchInput,
-          "!cursor-pointer": allowClear,
-        })}
+        className={cn(
+          "absolute right-1.5 top-1.5 flex space-x-1 items-center",
+          {
+            "!top-0.5": size === "small",
+            "!top-2.5": size === "large",
+            "hover:cursor-not-allowed": disabled,
+            "cursor-text": searchInput,
+            "!cursor-pointer": allowClear,
+          }
+        )}
       >
         {multipleSelection && maxSelect !== undefined && maxSelect > 0 && (
           <div className="text-gray-300">
@@ -352,7 +405,7 @@ const Select = ({
             height="20"
             viewBox="0 -960 960 960"
             width="20px"
-            className="fill-gray-200/60"
+            className="fill-gray-300"
           >
             <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
           </svg>
@@ -362,7 +415,7 @@ const Select = ({
             height="20px"
             viewBox="0 -960 960 960"
             width="20px"
-            className="fill-gray-200/60"
+            className="fill-gray-300"
           >
             <path d="M480-333 240-573l51-51 189 189 189-189 51 51-240 240Z" />
           </svg>

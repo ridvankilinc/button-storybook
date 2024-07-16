@@ -10,11 +10,19 @@ export default {
 const Template: StoryFn<SelectProps> = (args) => {
   const [selectedValue, setSelectedValue] = useState(args.defaultValue);
 
-  return <Select {...args} onChange={(value) => setSelectedValue(value)} />;
+  return (
+    <Select
+      {...args}
+      style={{ width: 400 }}
+      onChange={(value) => setSelectedValue(value)}
+    />
+  );
 };
 
 export const Default = Template.bind({});
 Default.args = {
+  multipleSelection: true,
+  selectAll: true,
   options: [
     { label: "Jack", description: "desc", value: "Option 1" },
     { label: "Alice", value: "Option 2" },
@@ -31,5 +39,10 @@ Default.args = {
     { label: "Mary", value: "Option 13" },
     { label: "Nancy", value: "Option 14" },
     { label: "Olivia", value: "Option 15" },
+    { label: "Peter", value: "Option 16" },
+    { label: "Quinn", value: "Option 17" },
+    { label: "Rose", value: "Option 18" },
+    { label: "Sophia", value: "Option 19" },
+    { label: "Tom", value: "Option 20" },
   ],
 };
