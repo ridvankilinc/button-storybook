@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Meta, StoryFn } from "@storybook/react";
-import Select, { SelectProps } from "./Select.tsx";
+import Select from "./Select.tsx";
+import { SelectProps } from "./types/types.ts";
 
 export default {
   title: "Stories/Select",
@@ -15,14 +16,13 @@ const Template: StoryFn<SelectProps> = (args) => {
       {...args}
       style={{ width: 400 }}
       onChange={(value) => setSelectedValue(value)}
+      renderValue={(value) => <div className="bg-red-500">{value}</div>}
     />
   );
 };
 
 export const Default = Template.bind({});
 Default.args = {
-  multipleSelection: true,
-  selectAll: true,
   options: [
     { label: "Jack", description: "desc", value: "Option 1" },
     { label: "Alice", value: "Option 2" },

@@ -1,38 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import cn from "classnames";
-
-interface Option {
-  label: string;
-  value: string;
-  disabled?: boolean;
-  description?: string;
-  icon?: React.ReactNode;
-}
-
-interface GroupOption {
-  label: string;
-  options: Option[];
-}
-
-export interface SelectProps {
-  label?: string;
-  defaultValue: string | string[];
-  options: Option[];
-  onChange: (value: string | string[]) => void;
-  disabled?: boolean;
-  allowClear?: boolean;
-  searchInput?: boolean;
-  multipleSelection?: boolean;
-  multipleSelectionIcon?: boolean;
-  selectAll?: boolean;
-  maxSelect?: number;
-  hideSelected?: boolean;
-  defaultActiveFirstOption?: boolean;
-  size: "small" | "default" | "large";
-  status?: "default" | "warning" | "error";
-  variant?: "outlined" | "borderless" | "filled";
-  style?: React.CSSProperties;
-}
+import { Option, SelectProps } from "./types/types.ts";
+import "../style.css";
 
 const Select = ({
   label = "Select",
@@ -52,6 +21,7 @@ const Select = ({
   hideSelected = false,
   defaultActiveFirstOption = false,
   style,
+  renderValue,
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [hasFocus, setHasFocus] = useState<boolean>(false);
@@ -114,6 +84,7 @@ const Select = ({
 
   useEffect(() => {
     let currentWidth = 0;
+    let newOverflowCount = 0;
     const container = overflowRef.current;
     if (!container) return;
 
@@ -124,18 +95,17 @@ const Select = ({
       if (label instanceof HTMLElement) {
         currentWidth += label.offsetWidth;
         if (currentWidth > container.offsetWidth) {
-          setOverflowCount((overflowCount) => overflowCount + 1);
+          newOverflowCount++;
         }
       }
     }
 
-    if (currentWidth < container.offsetWidth) {
-      setOverflowCount(0);
-    }
-    console.log("containterwidth", container?.offsetWidth);
-    console.log("currentwidth", currentWidth);
-    console.log(overflowCount);
-  }, [selectedLabels, isOpen]);
+    setOverflowCount(newOverflowCount);
+
+    console.log("currentWidth: ", currentWidth);
+    console.log("container.offsetWidth: ", container.offsetWidth);
+    console.log("overflowCount: ", newOverflowCount);
+  }, [selectedValues, selectedLabels]);
 
   const toggleMenu = (event?: React.MouseEvent) => {
     if (!disabled) {
@@ -308,7 +278,7 @@ const Select = ({
           <div
             ref={overflowRef}
             className={cn(
-              "flex gap-x-0.5 ml-1 overflow-hidden whitespace-nowrap ",
+              "flex gap-x-0.5 ml-1 overflow-hidden whitespace-nowrap",
               {
                 "ml-0": multipleSelection,
                 "mr-4": maxSelect,
@@ -317,41 +287,48 @@ const Select = ({
           >
             {selectedLabels.length > 0 ? (
               <>
-                {selectedLabels
-                  .slice(0, selectedLabels.length - overflowCount)
-                  .map((selectedLabel, index) => {
-                    const value = selectedValues[index];
-                    return (
-                      <span
-                        key={index}
-                        title={selectedLabel}
-                        className={cn("flex items-center rounded", {
-                          "bg-gray-200/80 px-1 py-0.5": multipleSelection,
-                          "!py-0": size === "small" && multipleSelection,
-                          "!py-1.5": size === "large" && multipleSelection,
-                          "text-gray-400": disabled,
-                        })}
-                      >
-                        {selectedLabel}
-                        {multipleSelection && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            height="20px"
-                            viewBox="0 -960 960 960"
-                            width="20px"
-                            className={cn("fill-gray-400 hover:fill-gray-600", {
-                              "cursor-pointer": searchInput,
+                {renderValue
+                  ? selectedLabels.map((selectedLabel, index) => {
+                      return renderValue(selectedLabel);
+                    })
+                  : selectedLabels
+                      .slice(0, selectedLabels.length)
+                      .map((selectedLabel, index) => {
+                        const value = selectedValues[index];
+                        return (
+                          <span
+                            key={index}
+                            title={selectedLabel}
+                            className={cn("flex items-center rounded", {
+                              "bg-gray-200/80 px-1 py-0.5": multipleSelection,
+                              "!py-0": size === "small" && multipleSelection,
+                              "!py-1.5": size === "large" && multipleSelection,
+                              "text-gray-400": disabled,
                             })}
-                            onClick={(e) =>
-                              handleRemoveSelectedOption(e, value)
-                            }
                           >
-                            <path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z" />
-                          </svg>
-                        )}
-                      </span>
-                    );
-                  })}
+                            {selectedLabel}
+                            {multipleSelection && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                height="20px"
+                                viewBox="0 -960 960 960"
+                                width="20px"
+                                className={cn(
+                                  "fill-gray-400 hover:fill-gray-600",
+                                  {
+                                    "cursor-pointer": searchInput,
+                                  }
+                                )}
+                                onClick={(e) =>
+                                  handleRemoveSelectedOption(e, value)
+                                }
+                              >
+                                <path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z" />
+                              </svg>
+                            )}
+                          </span>
+                        );
+                      })}
                 {overflowCount > 0 && (
                   <span
                     className={cn(

@@ -1,5 +1,4 @@
 import React from "react";
-import "./style.css";
 import cn from "classnames";
 
 export type BorderStyleType =
