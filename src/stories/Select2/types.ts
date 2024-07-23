@@ -22,6 +22,7 @@ export interface Select2Props {
   selectAll?: boolean;
   hideSelected?: boolean;
   maxSelect?: number;
-  placement?: "topLeft" | "topRigth" | "bottomLeft" | "bottomRight";
-  renderValue?: (value: string[]) => React.ReactNode;
+  placement?: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  renderLabels?: (label: string[]) => React.ReactNode;
+  responsiveMultiple?: boolean;
 }

@@ -21,10 +21,12 @@ const Select2 = ({
   selectAll = false,
   hideSelected = false,
   maxSelect,
-  renderValue,
+  renderLabels,
   placement = "bottomLeft",
+  responsiveMultiple,
 }: Select2Props) => {
   const selectRef = useRef<HTMLDivElement>(null);
+  const overflowRef = useRef<HTMLDivElement>(null);
 
   const [hasFocus, setHasFocus] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -35,21 +37,21 @@ const Select2 = ({
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
   const [isMouseOver, setIsMouseOver] = useState<boolean>(false);
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       selectRef.current &&
-  //       !selectRef.current.contains(event.target as Node)
-  //     ) {
-  //       setIsOpen(false);
-  //     }
-  //   };
-  //   document.addEventListener("mousedown", handleClickOutside);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        selectRef.current &&
+        !selectRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
 
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, []);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const toggleMenu = () => {
     if (!disabled) {
@@ -100,14 +102,20 @@ const Select2 = ({
         setSelectedValues([]);
         setSelectedLabels([]);
       } else {
-        const allValues = options
-          .filter((option) => !option.disabled)
-          .map((option) => option.value);
-        const allLabels = options
-          .filter((option) => !option.disabled)
-          .map((option) => option.label);
-        setSelectedValues(allValues);
-        setSelectedLabels(allLabels);
+        if (
+          maxSelect &&
+          options.filter((option) => !option.disabled).length > maxSelect
+        ) {
+        } else {
+          const allValues = options
+            .filter((option) => !option.disabled)
+            .map((option) => option.value);
+          const allLabels = options
+            .filter((option) => !option.disabled)
+            .map((option) => option.label);
+          setSelectedValues(allValues);
+          setSelectedLabels(allLabels);
+        }
       }
     }
   };
@@ -174,10 +182,7 @@ const Select2 = ({
     const filteredSearch = filteredOptions();
     if (!filteredSearch || Object.keys(filteredSearch).length === 0) {
       return (
-        <div
-          ref={selectRef}
-          className="text-gray-500 text-sm flex flex-col gap-2 items-center justify-center text-nowrap py-5 px-2"
-        >
+        <div className="text-gray-500 text-sm flex flex-col gap-2 items-center justify-center text-nowrap py-5 px-2">
           <BsInbox size={32} />
           No data
         </div>
@@ -187,14 +192,14 @@ const Select2 = ({
     return (
       <div
         className={cn("flex flex-col gap-y-1 py-2", {
-          "max-h-48 overflow-y-auto": (options?.length || 0) > 5,
+          "max-h-48 overflow-y-auto scroll": (options?.length || 0) > 6,
         })}
       >
         {selectAll && mode === "multi" && (
           <span
             onClick={handleSelectAll}
             className={cn(
-              "border-l border-transparent hover:border-blue-500 text-gray-900 py-1 px-3 flex items-center gap-x-1 cursor-pointer hover:bg-gray-100",
+              "border-l-2 border-transparent hover:border-blue-500 text-gray-900 py-1 px-3 flex items-center gap-x-1 cursor-pointer hover:bg-gray-100",
               {
                 "bg-gray-100":
                   selectedValues.length ===
@@ -221,7 +226,7 @@ const Select2 = ({
                 {value.map((m) => (
                   <div
                     className={cn(
-                      "px-3 border-l border-transparent hover:border-l-blue-500 hover:bg-gray-100 cursor-pointer py-1 flex items-center gap-x-1 text-sm whitespace-nowrap",
+                      "px-3 border-l-2 border-transparent hover:border-l-blue-500 hover:bg-gray-100 cursor-pointer py-1 flex items-center gap-x-1 text-sm whitespace-nowrap",
                       {
                         "bg-gray-100":
                           (selectedValue.includes(m.value) &&
@@ -254,7 +259,7 @@ const Select2 = ({
             return value.map((m) => (
               <div
                 className={cn(
-                  "px-2 border-l border-transparent hover:border-l-blue-500 hover:bg-gray-100 cursor-pointer py-1 flex items-center gap-x-1 text-sm  whitespace-nowrap",
+                  "px-2 border-l-2 border-transparent hover:border-l-blue-500 hover:bg-gray-100 cursor-pointer py-1 flex items-center gap-x-1 text-sm  whitespace-nowrap",
                   {
                     "bg-gray-100":
                       (selectedValue.includes(m.value) && mode === "single") ||
@@ -284,19 +289,27 @@ const Select2 = ({
   };
 
   return (
-    <div style={style} className="flex flex-col">
+    <div ref={selectRef} style={style} className="flex flex-col">
+      {isOpen && (placement === "topRight" || placement === "topLeft") && (
+        <div
+          className={cn("relative w-min min-w-48 rounded shadow mb-1 pt-1", {
+            "self-end": placement === "topRight",
+          })}
+        >
+          {renderOptions()}
+        </div>
+      )}
       <div
         onMouseEnter={() => setIsMouseOver(true)}
         onMouseLeave={() => setIsMouseOver(false)}
         onClick={toggleMenu}
-        ref={selectRef}
         className={cn(
-          "relative flex justify-between items-center gap-1 cursor-pointer text-sm border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500 place-content-center h-8 text-gray-900 px-2",
+          "relative flex justify-between items-center gap-1 cursor-pointer text-sm border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500  py-1 text-gray-900 px-2",
           {
             "!pl-1": mode === "multi" && selectedLabels.length > 0,
             "!outline-blue-500": !disabled && hasFocus,
-            "!h-6": size === "small",
-            "!h-10": size === "large",
+            "!py-0.5": size === "small",
+            "!py-1.5": size === "large",
             "!outline-red-500": hasFocus && !disabled && status === "error",
             "!outline-yellow-400":
               hasFocus && !disabled && status === "warning",
@@ -308,65 +321,96 @@ const Select2 = ({
         )}
       >
         {searchable && !disabled ? (
-          <input
-            placeholder={
-              (mode === "single" && selectedLabel) ||
-              (mode === "multi" && selectedLabels.length > 0
-                ? selectedLabels.join(" ,")
-                : placeholder)
-            }
-            title={selectedLabel || placeholder}
-            value={searchValue}
-            onChange={(e) => {
-              setSearchValue(e.target.value);
-            }}
-            onClick={() => setIsOpen(true)}
-            className={cn(
-              "relative w-full outline-transparent truncate placeholder:focus:text-gray-400",
-              {
-                "placeholder:text-gray-900":
-                  (mode === "single" && selectedLabel) ||
-                  (mode === "multi" && selectedLabels.length > 0),
+          <div className="flex flex-wrap gap-1 cursor-text">
+            {mode === "multi" && selectedLabels && renderLabels
+              ? renderLabels(selectedLabels)
+              : selectedLabels.map((label, i) => (
+                  <span
+                    title={label}
+                    key={i}
+                    className={cn(
+                      "text-gray-900 bg-gray-200 px-1 rounded flex items-center whitespace-nowrap cursor-default min-w-0",
+                      {
+                        "py-1": size === "large",
+                        "bg-white": variant === "filled",
+                      }
+                    )}
+                  >
+                    {label}
+                    <FaXmark
+                      onClick={(event) => handleClearOption(event, i)}
+                      className="fill-gray-400 hover:fill-gray-500 cursor-pointer"
+                    />
+                  </span>
+                ))}
+            <input
+              placeholder={
+                selectedLabel
+                  ? selectedLabel
+                  : selectedLabels.length > 0
+                    ? ""
+                    : placeholder
               }
-            )}
-          />
+              title={selectedLabel || placeholder}
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+              }}
+              onClick={() => setIsOpen(true)}
+              className={cn(
+                "flex-1 min-w-0 outline-none placeholder:focus:text-gray-400 whitespace-normal bg-transparent ",
+                {
+                  "placeholder:text-gray-900":
+                    (mode === "single" && selectedLabel) ||
+                    (mode === "multi" && selectedLabels.length > 0),
+                }
+              )}
+            />
+          </div>
         ) : (
           <div
             title={selectedLabel || placeholder}
-            className={cn(" truncate flex gap-x-1", {
-              "text-gray-400":
-                !selectedLabel ||
-                (mode === "multi" && selectedLabels.length < 1),
-            })}
+            ref={overflowRef}
+            className={cn(
+              "flex flex-wrap w-full truncate gap-1 text-gray-400",
+              {
+                "text-gray-900": selectedLabel,
+              }
+            )}
           >
-            {mode === "multi"
-              ? selectedLabels.length > 0
-                ? renderValue
-                  ? renderValue(selectedValues)
-                  : selectedLabels.map((label, i) => {
-                      return (
-                        <span
-                          title={label}
-                          key={i}
-                          className={cn(
-                            "text-gray-900 bg-gray-200 px-1 rounded h-6 flex items-center",
-                            {
-                              "h-4": size === "small",
-                              "h-8": size === "large",
-                              "bg-white": variant === "filled",
-                            }
-                          )}
-                        >
-                          {label}
-                          <FaXmark
-                            onClick={(event) => handleClearOption(event, i)}
-                            className="fill-gray-400 hover:fill-gray-500"
-                          />
-                        </span>
-                      );
-                    })
-                : placeholder
-              : selectedLabel || placeholder}
+            {mode === "multi" ? (
+              selectedLabels.length > 0 ? (
+                renderLabels ? (
+                  renderLabels(selectedLabels)
+                ) : (
+                  <React.Fragment>
+                    {selectedLabels.map((label, i) => (
+                      <span
+                        title={label}
+                        key={i}
+                        className={cn(
+                          "text-gray-900 bg-gray-200 px-1 rounded flex items-center",
+                          {
+                            "py-1": size === "large",
+                            "bg-white": variant === "filled",
+                          }
+                        )}
+                      >
+                        {label}
+                        <FaXmark
+                          onClick={(event) => handleClearOption(event, i)}
+                          className="fill-gray-400 hover:fill-gray-500"
+                        />
+                      </span>
+                    ))}
+                  </React.Fragment>
+                )
+              ) : (
+                placeholder
+              )
+            ) : (
+              selectedLabel || placeholder
+            )}
           </div>
         )}
         <div className="flex gap-x-1 items-center">
@@ -407,16 +451,16 @@ const Select2 = ({
           </div>
         </div>
       </div>
-      {isOpen && (
-        <div
-          ref={selectRef}
-          className={cn("relative w-min rounded shadow mt-1 pt-1", {
-            "self-end": placement === "bottomRight",
-          })}
-        >
-          {renderOptions()}
-        </div>
-      )}
+      {isOpen &&
+        (placement === "bottomLeft" || placement === "bottomRight") && (
+          <div
+            className={cn("relative w-min min-w-48 rounded shadow mt-1 pt-1", {
+              "self-end": placement === "bottomRight",
+            })}
+          >
+            {renderOptions()}
+          </div>
+        )}
     </div>
   );
 };

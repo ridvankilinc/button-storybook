@@ -16,46 +16,52 @@ const Template: StoryFn<Select2Props> = (args) => {
 export const Default = Template.bind({});
 Default.args = {
   mode: "multi",
-  searchable: true,
   options: [
     {
       category: "Category 1",
       icon: <BiUserCircle />,
       description: "(desc)",
       value: "category1item1",
-      label: "Category Item 1",
+      label: "a100",
     },
     {
       category: "Category 1",
-      icon: <BiUserCircle />,
       value: "category1item2",
-      label: "Category Item 2",
+      label: "a101",
     },
 
     {
       category: "Category 2",
-      icon: <BiUserCircle />,
       value: "category2item1",
-      label: "Category Item 1",
+      label: "b100",
     },
     {
       category: "Category 2",
+      icon: <BiUserCircle />,
       value: "category2item2",
-      label: "Category Item 2",
+      label: "b101",
     },
 
     {
       icon: <BiUserCircle />,
       value: "defaultvalue1",
-      label: "Default Value 1",
+      label: "c100",
     },
     {
       value: "defaultvalue2",
-      label: "Default Value 2",
+      label: "c101",
     },
     {
       value: "defaultvalue3 ",
-      label: "Default Value 3",
+      label: "c102",
+    },
+    {
+      value: "defaultvalue4 ",
+      label: "c103",
+    },
+    {
+      value: "defaultvalue5 ",
+      label: "c104",
     },
   ],
 };
