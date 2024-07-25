@@ -10,7 +10,9 @@ export default {
 } as Meta;
 
 const Template: StoryFn<Select2Props> = (args) => {
-  return <Select2 {...args} style={{ width: 300 }} loading clearable />;
+  return (
+    <Select2 {...args} style={{ width: 300 }} mode="multi" responsiveMultiple />
+  );
 };
 
 export const Default = Template.bind({});
