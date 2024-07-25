@@ -28,7 +28,6 @@ export interface Select2Props {
   maxSelect?: number;
   placement?: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
   renderLabel?: (label: string) => React.ReactNode;
-  renderLabels?: (label: string[]) => React.ReactNode;
   responsiveMultiple?: boolean;
   highlightOnHover?: boolean;
 }

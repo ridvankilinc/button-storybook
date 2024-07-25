@@ -40,7 +40,6 @@ const Select2 = ({
   hideSelected = false,
   maxSelect,
   renderLabel,
-  renderLabels,
   placement = "bottomLeft",
   responsiveMultiple,
   highlightOnHover = false,
@@ -71,10 +70,9 @@ const Select2 = ({
 
     for (let i = 0; i < selectedValues.length; i++) {
       const label = labels[i];
-      if (label instanceof HTMLSpanElement) {
+      if (label instanceof HTMLElement) {
         currentWidth += label.offsetWidth + 4;
-        console.log("containerWidth: " + containerWidth);
-        console.log("currentWidth: " + currentWidth);
+
         if (currentWidth > containerWidth) {
           overflowCount++;
         } else {
@@ -83,11 +81,8 @@ const Select2 = ({
       }
     }
     overflowCount > 0 && overflowCount++;
-
     setFlowCount(flowCount);
     setOverflowCount(overflowCount);
-    console.log("flowCount: " + flowCount);
-    console.log("overflowCount: " + overflowCount);
   }, [selectedValues]);
 
   useEffect(() => {
@@ -247,9 +242,7 @@ const Select2 = ({
 
     return (
       <div
-        className={cn("flex flex-col gap-y-1 py-2", {
-          "max-h-48 overflow-y-auto scroll": (options?.length || 0) > 6,
-        })}
+        className={cn("flex flex-col gap-y-1 py-2 overflow-y-auto max-h-64")}
       >
         {selectAll && mode === "multi" && (
           <span
@@ -397,28 +390,67 @@ const Select2 = ({
         )}
       >
         {searchable && !disabled ? (
-          <div className="flex flex-wrap gap-1 cursor-text w-full">
-            {mode === "multi" && selectedLabels && renderLabels
-              ? renderLabels(selectedLabels)
-              : selectedLabels.map((label, i) => (
-                  <span
-                    title={highlightOnHover ? label : ""}
-                    key={i}
-                    className={cn(
-                      "text-gray-900 bg-gray-200 px-1 rounded flex items-center whitespace-nowrap cursor-default min-w-0",
-                      {
-                        "py-1": size === "large",
-                        "bg-white": variant === "filled",
+          <div
+            ref={overflowRef}
+            className={cn("flex gap-1 truncate w-full cursor-default", {
+              "flex-wrap": !responsiveMultiple,
+            })}
+          >
+            {mode === "multi" && selectedLabels && (
+              <React.Fragment>
+                {selectedLabels
+                  .slice(
+                    0,
+                    responsiveMultiple
+                      ? overflowCount > 0
+                        ? flowCount - 1
+                        : flowCount + 1
+                      : selectedLabels.length
+                  )
+                  .map((label, i) =>
+                    renderLabel ? (
+                      renderLabel(label)
+                    ) : (
+                      <span
+                        title={highlightOnHover ? label : ""}
+                        key={i}
+                        className={cn(
+                          "text-gray-900 bg-gray-200 px-1 rounded flex items-center",
+                          {
+                            "py-1": size === "large",
+                            "bg-white": variant === "filled",
+                          }
+                        )}
+                      >
+                        {label}
+                        <FaXmark
+                          onClick={(event) => handleClearOption(event, i)}
+                          className="fill-gray-400 hover:fill-gray-500 cursor-pointer"
+                        />
+                      </span>
+                    )
+                  )}
+                {responsiveMultiple &&
+                  overflowCount > 0 &&
+                  (renderLabel ? (
+                    renderLabel("+ " + overflowCount + " ...")
+                  ) : (
+                    <div
+                      title={
+                        highlightOnHover
+                          ? selectedLabels
+                              .slice(flowCount - 1, flowCount + overflowCount)
+                              .map((l) => l)
+                              .join(" ,")
+                          : ""
                       }
-                    )}
-                  >
-                    {label}
-                    <FaXmark
-                      onClick={(event) => handleClearOption(event, i)}
-                      className="fill-gray-400 hover:fill-gray-500 cursor-pointer"
-                    />
-                  </span>
-                ))}
+                      className="text-gray-900 bg-gray-200 px-1 rounded flex items-center"
+                    >
+                      + {overflowCount} ...
+                    </div>
+                  ))}
+              </React.Fragment>
+            )}
             <input
               placeholder={
                 selectedLabel
@@ -436,12 +468,38 @@ const Select2 = ({
               className={cn(
                 "flex-1 min-w-0 outline-none placeholder:focus:text-gray-400 whitespace-normal bg-transparent ",
                 {
-                  "placeholder:text-gray-900":
+                  "placeholder:text-gray-900 ":
                     (mode === "single" && selectedLabel) ||
                     (mode === "multi" && selectedLabels.length > 0),
+                  "flex-none max-w-fit": responsiveMultiple,
                 }
               )}
             />
+            {responsiveMultiple &&
+              selectedLabels
+                .slice(
+                  overflowCount > 0 ? flowCount - 1 : flowCount,
+                  flowCount + overflowCount + 1
+                )
+                .map((label, i) =>
+                  renderLabel ? (
+                    renderLabel(label)
+                  ) : (
+                    <span
+                      key={i}
+                      className={cn(
+                        "text-gray-900 bg-gray-200 px-1 rounded items-center flex opacity-0",
+                        {
+                          "py-1": size === "large",
+                          "bg-white": variant === "filled",
+                        }
+                      )}
+                    >
+                      {label}
+                      <FaXmark className="fill-gray-400 hover:fill-gray-500" />
+                    </span>
+                  )
+                )}
           </div>
         ) : (
           <div
@@ -454,20 +512,20 @@ const Select2 = ({
           >
             {mode === "multi" ? (
               selectedLabels.length > 0 ? (
-                renderLabels ? (
-                  renderLabels(selectedLabels)
-                ) : (
-                  <React.Fragment>
-                    {selectedLabels
-                      .slice(
-                        0,
-                        responsiveMultiple
-                          ? overflowCount > 0
-                            ? flowCount - 1
-                            : flowCount + 1
-                          : selectedLabels.length
-                      )
-                      .map((label, i) => (
+                <React.Fragment>
+                  {selectedLabels
+                    .slice(
+                      0,
+                      responsiveMultiple
+                        ? overflowCount > 0
+                          ? flowCount - 1
+                          : flowCount + 1
+                        : selectedLabels.length
+                    )
+                    .map((label, i) =>
+                      renderLabel ? (
+                        renderLabel(label)
+                      ) : (
                         <span
                           title={highlightOnHover ? label : ""}
                           key={i}
@@ -485,9 +543,13 @@ const Select2 = ({
                             className="fill-gray-400 hover:fill-gray-500"
                           />
                         </span>
-                      ))}
-
-                    {overflowCount > 0 && (
+                      )
+                    )}
+                  {responsiveMultiple &&
+                    overflowCount > 0 &&
+                    (renderLabel ? (
+                      renderLabel("+ " + overflowCount + " ...")
+                    ) : (
                       <div
                         title={
                           highlightOnHover
@@ -501,14 +563,19 @@ const Select2 = ({
                       >
                         + {overflowCount} ...
                       </div>
-                    )}
-                    {responsiveMultiple &&
-                      selectedLabels
-                        .slice(
-                          overflowCount > 0 ? flowCount - 1 : flowCount,
-                          flowCount + overflowCount + 1
-                        )
-                        .map((label, i) => (
+                    ))}
+                  {responsiveMultiple &&
+                    selectedLabels
+                      .slice(
+                        overflowCount > 0 ? flowCount - 1 : flowCount,
+                        flowCount + overflowCount + 1
+                      )
+                      .map((label, i) =>
+                        renderLabel ? (
+                          <span className="opacity-0">
+                            {renderLabel(label)}
+                          </span>
+                        ) : (
                           <span
                             key={i}
                             className={cn(
@@ -522,9 +589,9 @@ const Select2 = ({
                             {label}
                             <FaXmark className="fill-gray-400 hover:fill-gray-500" />
                           </span>
-                        ))}
-                  </React.Fragment>
-                )
+                        )
+                      )}
+                </React.Fragment>
               ) : (
                 placeholder
               )
