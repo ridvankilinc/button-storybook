@@ -1,29 +1,49 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Option, Select2Props } from "./types";
 import cn from "classnames";
 import "../style.css";
 import { BsChevronDown, BsInbox, BsSearch, BsXCircle } from "react-icons/bs";
 import { FaXmark } from "react-icons/fa6";
 import { MdCheckBoxOutlineBlank, MdOutlineCheckBox } from "react-icons/md";
+import {
+  LABEL_CN,
+  PLACEMENT_CN,
+  SIZE_CN,
+  STATUS_CN,
+  VARIANT_CN,
+} from "./constants.tsx";
+import { VscLoading } from "react-icons/vsc";
 
 const Select2 = ({
   style,
   options,
   placeholder = "Placeholder",
+  label,
+  labelModel,
   size = "medium",
   status = "default",
   variant = "outlined",
-  disabled,
+  disabled = false,
+  loading = false,
   searchable = false,
   clearable = false,
+  clearOnSelect = true,
   mode = "single",
   multiCheckbox = false,
   selectAll = false,
   hideSelected = false,
   maxSelect,
+  renderLabel,
   renderLabels,
   placement = "bottomLeft",
   responsiveMultiple,
+  highlightOnHover = false,
 }: Select2Props) => {
   const selectRef = useRef<HTMLDivElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -36,6 +56,29 @@ const Select2 = ({
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
   const [isMouseOver, setIsMouseOver] = useState<boolean>(false);
+  const [testCount, setTestCount] = useState<number>(0);
+  const [overflowCount, setOverflowCount] = useState<number>(0);
+
+  // useEffect(() => {
+  //   const container = overflowRef.current;
+  //   if (!container) return;
+
+  //   let visibleWidth = 0;
+  //   const labels = container.querySelectorAll("span");
+  //   let count = 0;
+
+  //   for (let i = 0; i < labels.length; i++) {
+  //     const label = labels[i];
+  //     if (label instanceof HTMLElement) {
+  //       visibleWidth += label.offsetWidth;
+  //       if (visibleWidth <= container.offsetWidth - 18) {
+  //         count++;
+  //       }
+  //     }
+  //   }
+  //   setTestCount(count);
+  //   console.log("uselayout: " + testCount);
+  // }, [selectedValues, testCount]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,6 +87,8 @@ const Select2 = ({
         !selectRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        setHasFocus(false);
+        setSearchValue("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -73,6 +118,7 @@ const Select2 = ({
           }
           setSelectedValues((prevValues) => [...prevValues, value]);
           setSelectedLabels((prevLabels) => [...prevLabels, label]);
+          clearOnSelect && setSearchValue("");
         } else {
           const newSelectedValues = [...selectedValues];
           newSelectedValues.splice(selectedIndex, 1);
@@ -292,41 +338,59 @@ const Select2 = ({
     <div ref={selectRef} style={style} className="flex flex-col">
       {isOpen && (placement === "topRight" || placement === "topLeft") && (
         <div
-          className={cn("relative w-min min-w-48 rounded shadow mb-1 pt-1", {
-            "self-end": placement === "topRight",
-          })}
+          style={{
+            transition: "height 0.5s ease-in-out, opacity 0.5s ease-in-out",
+            animation: isOpen
+              ? "slideDownFadeIn 0.5s ease-in-out forwards"
+              : "slideUpFadeOut 0.5s ease-in-out backwards",
+          }}
+          className={cn(
+            "relative w-min min-w-48 rounded shadow mb-1 pt-1",
+            PLACEMENT_CN[placement || "topLeft"]
+          )}
         >
           {renderOptions()}
         </div>
+      )}
+      {label && (
+        <p
+          className={cn(
+            "text-xs text-gray-500 truncate w-min",
+            LABEL_CN[labelModel || "default"],
+            {
+              "transition ease-in opacity-100 ":
+                isOpen === true && labelModel === "open",
+            }
+          )}
+        >
+          {label}
+        </p>
       )}
       <div
         onMouseEnter={() => setIsMouseOver(true)}
         onMouseLeave={() => setIsMouseOver(false)}
         onClick={toggleMenu}
         className={cn(
-          "relative flex justify-between items-center gap-1 cursor-pointer text-sm border-none outline outline-1 outline-gray-300 bg-white rounded hover:outline-blue-500  py-1 text-gray-900 px-2",
+          "relative flex justify-between items-center gap-1 cursor-pointer text-sm border-none bg-white rounded text-gray-900 px-2",
+          SIZE_CN[size || "medium"],
+          VARIANT_CN[variant || "outlined"],
+          STATUS_CN[status || "default"],
           {
-            "!pl-1": mode === "multi" && selectedLabels.length > 0,
-            "!outline-blue-500": !disabled && hasFocus,
-            "!py-0.5": size === "small",
-            "!py-1.5": size === "large",
-            "!outline-red-500": hasFocus && !disabled && status === "error",
-            "!outline-yellow-400":
-              hasFocus && !disabled && status === "warning",
+            "!bg-white outline outline-1 ": isOpen && variant === "filled",
+            "pl-1": mode === "multi" && selectedLabels.length > 0,
             "!bg-gray-200 hover:outline-gray-300 hover:cursor-not-allowed !text-gray-400":
               disabled,
-            "!outline-transparent": variant === "borderless",
-            "!bg-gray-300 !outline-gray-300": variant === "filled",
+            "!outline-blue-500": hasFocus,
           }
         )}
       >
         {searchable && !disabled ? (
-          <div className="flex flex-wrap gap-1 cursor-text">
+          <div className="flex flex-wrap gap-1 cursor-text w-full">
             {mode === "multi" && selectedLabels && renderLabels
               ? renderLabels(selectedLabels)
               : selectedLabels.map((label, i) => (
                   <span
-                    title={label}
+                    title={highlightOnHover ? label : ""}
                     key={i}
                     className={cn(
                       "text-gray-900 bg-gray-200 px-1 rounded flex items-center whitespace-nowrap cursor-default min-w-0",
@@ -351,7 +415,7 @@ const Select2 = ({
                     ? ""
                     : placeholder
               }
-              title={selectedLabel || placeholder}
+              title={highlightOnHover ? selectedLabel || placeholder : ""}
               value={searchValue}
               onChange={(e) => {
                 setSearchValue(e.target.value);
@@ -369,14 +433,11 @@ const Select2 = ({
           </div>
         ) : (
           <div
-            title={selectedLabel || placeholder}
             ref={overflowRef}
-            className={cn(
-              "flex flex-wrap w-full truncate gap-1 text-gray-400",
-              {
-                "text-gray-900": selectedLabel,
-              }
-            )}
+            title={highlightOnHover ? selectedLabel || placeholder : ""}
+            className={cn("flex flex-wrap truncate gap-1 text-gray-400", {
+              "text-gray-900": selectedLabel,
+            })}
           >
             {mode === "multi" ? (
               selectedLabels.length > 0 ? (
@@ -386,7 +447,7 @@ const Select2 = ({
                   <React.Fragment>
                     {selectedLabels.map((label, i) => (
                       <span
-                        title={label}
+                        title={highlightOnHover ? label : ""}
                         key={i}
                         className={cn(
                           "text-gray-900 bg-gray-200 px-1 rounded flex items-center",
@@ -403,13 +464,21 @@ const Select2 = ({
                         />
                       </span>
                     ))}
+                    {overflowCount > 0 && (
+                      <span className="bg-red-500">+ {overflowCount} ...</span>
+                    )}
                   </React.Fragment>
                 )
               ) : (
                 placeholder
               )
             ) : (
-              selectedLabel || placeholder
+              (renderLabel &&
+                (selectedLabel.length > 0
+                  ? renderLabel(selectedLabel)
+                  : placeholder)) ||
+              selectedLabel ||
+              placeholder
             )}
           </div>
         )}
@@ -429,6 +498,8 @@ const Select2 = ({
                 onClick={handleClearSelection}
                 className="fill-gray-400 hover:fill-gray-500"
               />
+            ) : loading ? (
+              <VscLoading className="animate-spin fill-gray-400" />
             ) : searchable && !disabled && isOpen ? (
               <BsSearch className="fill-gray-400 hover:fill-gray-500" />
             ) : (
@@ -454,9 +525,16 @@ const Select2 = ({
       {isOpen &&
         (placement === "bottomLeft" || placement === "bottomRight") && (
           <div
-            className={cn("relative w-min min-w-48 rounded shadow mt-1 pt-1", {
-              "self-end": placement === "bottomRight",
-            })}
+            style={{
+              transition: "height 0.5s ease-in-out, opacity 0.5s ease-in-out",
+              animation: isOpen
+                ? "slideDownFadeIn 0.5s ease-in-out forwards"
+                : "slideUpFadeOut 0.5s ease-in-out backwards",
+            }}
+            className={cn(
+              "relative w-min min-w-48  rounded shadow mt-1 pt-1",
+              PLACEMENT_CN[placement || "bottomLeft"]
+            )}
           >
             {renderOptions()}
           </div>

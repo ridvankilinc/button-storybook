@@ -2,3 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes slideDownFadeIn {
+    0% {
+        opacity: 0;
+        height: 0;
+    }
+
+    100% {
+        opacity: 1;
+        height: auto;
+    }
+}
+
+@keyframes slideUpFadeOut {
+    0% {
+        opacity: 1;
+        height: auto;
+    }
+
+    100% {
+        opacity: 0;
+        height: 0;
+    }
+}

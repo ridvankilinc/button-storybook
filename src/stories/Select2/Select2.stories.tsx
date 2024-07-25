@@ -10,12 +10,11 @@ export default {
 } as Meta;
 
 const Template: StoryFn<Select2Props> = (args) => {
-  return <Select2 {...args} style={{ width: 400 }} />;
+  return <Select2 {...args} style={{ width: 300 }} loading clearable />;
 };
 
 export const Default = Template.bind({});
 Default.args = {
-  mode: "multi",
   options: [
     {
       category: "Category 1",
