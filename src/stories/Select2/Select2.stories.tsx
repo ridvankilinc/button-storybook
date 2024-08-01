@@ -1,7 +1,7 @@
 import React from "react";
 import { Meta, StoryFn } from "@storybook/react";
 import Select2 from "./Select2.tsx";
-import { Select2Props } from "./types.ts";
+import { Select2Props } from "./types/types.ts";
 import { BiUserCircle } from "react-icons/bi";
 
 export default {

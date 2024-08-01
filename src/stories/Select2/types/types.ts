@@ -26,8 +26,17 @@ export interface Select2Props {
   selectAll?: boolean;
   hideSelected?: boolean;
   maxSelect?: number;
-  placement?: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  menuPlacement?: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
   renderLabel?: (label: string) => React.ReactNode;
   responsiveMultiple?: boolean;
   highlightOnHover?: boolean;
+  menuNoData?: () => React.ReactNode;
+  menuLabel?: (label: string) => React.ReactNode;
+  icon?: Icons;
+}
+
+interface Icons {
+  selectAllBlank?: React.ReactNode;
+  selectAllFill?: React.ReactNode;
+  menuNoData?: React.ReactNode;
 }

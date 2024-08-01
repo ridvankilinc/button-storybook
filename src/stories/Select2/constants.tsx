@@ -6,19 +6,20 @@ export const SIZE_CN = {
 
 export const STATUS_CN = {
   default: "outline-blue-500",
-  warning: "outline-yellow-400 hover:outline-yellow-400",
-  error: "outline-red-500 hover:outline-red-500",
+  warning: "!outline-yellow-400",
+  error: "!outline-red-500 ",
 };
 
 export const VARIANT_CN = {
   outlined: "outline outline-1 outline-gray-300 hover:outline-blue-500",
-  filled: "bg-gray-300 outline-gray-300 ",
-  borderless: "",
+  filled: "bg-gray-300 hover:bg-gray-400/50 outline-gray-300 ",
+  borderless: "!outline-transparent",
 };
 
 export const PLACEMENT_CN = {
-  topRight: "self-end",
-  bottomRight: "self-end",
+  topLeft: "bottom-0 top-auto",
+  topRight: "bottom-0 top-auto right-0",
+  bottomRight: "right-0",
 };
 
 export const LABEL_CN = {
